@@ -55,7 +55,9 @@ async def handle_message(message: Message, bot: Bot):
     bad = moder_agent.process_text(message.text)
 
     if bad:
-        await bot.send_message(config.ADMIN_ID, f"Пользователь {message.from_user.first_name} @{message.from_user.username}, говорит плохие слова:\n\n{message.text}")
+        await notify_admins(bot, _method="send_message",
+            text=f"Пользователь {message.from_user.first_name} @{message.from_user.username} говорит плохие слова:\n\n{message.text}"
+        )
         await message.answer(f"Друг, {message.from_user.first_name} @{message.from_user.username}, так в это группе высказываться нельзя, помолчи {config.DURATION_MINUTES} минут")
         await message.delete()
         await mute(message, bot)
@@ -79,10 +81,8 @@ async def handle_photo(message: Message, bot: Bot):
         bad = await asyncio.to_thread(moder_agent.process_text, message.caption)
 
     if bad:
-        await bot.send_photo(
-            chat_id=config.ADMIN_ID,
-            photo=photo,
-            caption=f"Пользователь {message.from_user.first_name} @{message.from_user.username}, присылает плохие картинки и слова:\n\n{message.caption}"
+        await notify_admins(bot, _method="send_photo", photo=photo,
+            caption=f"Пользователь {message.from_user.first_name} @{message.from_user.username} присылает плохие картинки:\n\n{message.caption}"
         )
         await message.answer(f"Друг, {message.from_user.first_name} @{message.from_user.username}, так в это группе высказываться нельзя, помолчи {config.DURATION_MINUTES} минут")
         await message.delete()
@@ -105,11 +105,10 @@ async def handle_gif(message: Message, bot: Bot):
     file.seek(0)
 
     if bad:
-        await bot.send_animation(
-            chat_id=config.ADMIN_ID,
-            animation=gif,
+        await notify_admins(bot, _method="send_animation", animation=gif)
+        await notify_admins(bot, _method="send_message",
+            text=f"Пользователь {message.from_user.first_name} @{message.from_user.username} присылает плохие гифки"
         )
-        await bot.send_message(config.ADMIN_ID, f"Пользователь {message.from_user.first_name} @{message.from_user.username}, присылает плохие гифки:\n\n{message.caption}")
         await message.answer(f"Друг, {message.from_user.first_name} @{message.from_user.username}, так в это группе высказываться нельзя, помолчи {config.DURATION_MINUTES} минут")
         await message.delete()
         await mute(message, bot)
@@ -136,11 +135,10 @@ async def handle_sticker(message: Message, bot: Bot):
         bad = await asyncio.to_thread(moder_agent.process_image, file_io)
 
     if bad:
-        await bot.send_sticker(
-            chat_id=config.ADMIN_ID,
-            sticker=message.sticker.file_id,
+        await notify_admins(bot, _method="send_sticker", sticker=message.sticker.file_id)
+        await notify_admins(bot, _method="send_message",
+            text=f"Пользователь {message.from_user.first_name} @{message.from_user.username} присылает плохие стикеры"
         )
-        await bot.send_message(config.ADMIN_ID, f"Пользователь {message.from_user.first_name} @{message.from_user.username}, присылает плохие стикеры")
         await message.answer(f"Друг, {message.from_user.first_name} @{message.from_user.username}, так в это группе высказываться нельзя, помолчи {config.DURATION_MINUTES} минут")
         await message.delete()
         await mute(message, bot)
@@ -164,16 +162,12 @@ async def handle_audio_messages(message: Message, bot: Bot):
 
     if bad:
         if message.content_type == ContentType.VOICE:
-            await bot.send_voice(
-                chat_id=config.ADMIN_ID,
-                voice=file_id,
-            )
+            await notify_admins(bot, _method="send_voice", voice=file_id)
         else:
-            await bot.send_video_note(
-                chat_id=config.ADMIN_ID,
-                video_note=file_id,
-            )
-        await bot.send_message(config.ADMIN_ID, f"Пользователь {message.from_user.first_name} @{message.from_user.username}, присылает плохие голосовые/кружки")
+            await notify_admins(bot, _method="send_video_note", video_note=file_id)
+        await notify_admins(bot, _method="send_message",
+            text=f"Пользователь {message.from_user.first_name} @{message.from_user.username} присылает плохие голосовые/кружки"
+        )
         await message.answer(f"Друг, {message.from_user.first_name} @{message.from_user.username}, так в это группе высказываться нельзя, помолчи {config.DURATION_MINUTES} минут")
         await message.delete()
         await mute(message, bot)
