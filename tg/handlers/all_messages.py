@@ -34,11 +34,17 @@ async def mute(message: Message, bot: Bot):
         until_date=until_date
     )
 
+async def notify_admins(bot: Bot, **kwargs):
+    method_name = kwargs.pop("_method", "send_message")
+    send = getattr(bot, method_name)
+    for admin_id in config.ADMIN_IDS:
+        await send(chat_id=admin_id, **kwargs)
+
 
 router = Router()
 
 
-@router.message(F.chat.id == config.GROUP_ID, F.content_type == ContentType.TEXT)
+@router.message(F.chat.id.in_(config.GROUP_IDS), F.content_type == ContentType.TEXT)
 async def handle_message(message: Message, bot: Bot):
     print("ТЕКСТ")
     member = await bot.get_chat_member(chat_id=message.chat.id, user_id=message.from_user.id)
@@ -55,7 +61,7 @@ async def handle_message(message: Message, bot: Bot):
         await mute(message, bot)
 
 
-@router.message(F.chat.id == config.GROUP_ID, F.content_type == ContentType.PHOTO)
+@router.message(F.chat.id.in_(config.GROUP_IDS), F.content_type == ContentType.PHOTO)
 async def handle_photo(message: Message, bot: Bot):
     print("ФОТО")
     member = await bot.get_chat_member(chat_id=message.chat.id, user_id=message.from_user.id)
@@ -83,7 +89,7 @@ async def handle_photo(message: Message, bot: Bot):
         await mute(message, bot)
 
 
-@router.message(F.chat.id == config.GROUP_ID, F.content_type == ContentType.ANIMATION)
+@router.message(F.chat.id.in_(config.GROUP_IDS), F.content_type == ContentType.ANIMATION)
 async def handle_gif(message: Message, bot: Bot):
     print("ГИФКА")
     member = await bot.get_chat_member(chat_id=message.chat.id, user_id=message.from_user.id)
@@ -109,7 +115,7 @@ async def handle_gif(message: Message, bot: Bot):
         await mute(message, bot)
 
 
-@router.message(F.chat.id == config.GROUP_ID, F.sticker)
+@router.message(F.chat.id.in_(config.GROUP_IDS), F.sticker)
 async def handle_sticker(message: Message, bot: Bot):
     print(f"СТИКЕР")
     member = await bot.get_chat_member(chat_id=message.chat.id, user_id=message.from_user.id)
@@ -140,7 +146,7 @@ async def handle_sticker(message: Message, bot: Bot):
         await mute(message, bot)
 
 
-@router.message(F.chat.id == config.GROUP_ID, (F.voice | F.video_note))
+@router.message(F.chat.id.in_(config.GROUP_IDS), (F.voice | F.video_note))
 async def handle_audio_messages(message: Message, bot: Bot):
     print("ГОЛОСОВОЕ/КРУЖОЧЕК")
     member = await bot.get_chat_member(chat_id=message.chat.id, user_id=message.from_user.id)
